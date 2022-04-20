@@ -4,6 +4,7 @@ const {HashRouter, Route} = ReactRouterDOM;
 const {DatePicker} = antd;
 import './normalize.css';
 import './index.less';
+import {Main} from "./Main";
 
 const Test = () => {
   React.useEffect(() => {
@@ -41,8 +42,7 @@ export default function Home() {
   return (
     <HashRouter>
       <Route path="/">
-        233
-        <Route path="/about" component={Test}/>
+        <Route path="/main" component={Main}/>
         <Route path="/inbox" component={Test}>
           <Route path="/messages/:id" component={Test}/>
         </Route>
