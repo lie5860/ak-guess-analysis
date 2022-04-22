@@ -41,12 +41,8 @@ export default function Home() {
   console.log(233)
   return (
     <HashRouter>
-      <Route path="/">
-        <Route path="/main" component={Main}/>
-        <Route path="/inbox" component={Test}>
-          <Route path="/messages/:id" component={Test}/>
-        </Route>
-      </Route>
+      <Route path="/" exact component={Main}/>
+      <Route path="/main" exact/>
     </HashRouter>
   )
 }

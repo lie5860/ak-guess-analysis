@@ -1,34 +1,26 @@
 import {echarts, React} from "../global";
 
-export const Pie = () => {
+export const Pie = (props: { data: any[] }) => {
   const ref = React.useRef()
+  const pieRef = React.useRef(null);
   React.useEffect(() => {
-    var myChart = echarts.init(ref.current);
-    var option = {
-      title: {
-        text: 'Referer of a Website',
-        subtext: 'Fake Data',
-        left: 'center'
-      },
+    pieRef.current = echarts.init(ref.current);
+  }, [])
+  React.useEffect(() => {
+    const option = {
       tooltip: {
         trigger: 'item'
       },
       legend: {
         orient: 'vertical',
-        left: 'left'
+        left: 'right',
+        top: 'middle'
       },
       series: [
         {
-          name: 'Access From',
           type: 'pie',
-          radius: '50%',
-          data: [
-            {value: 1048, name: 'Search Engine'},
-            {value: 735, name: 'Direct'},
-            {value: 580, name: 'Email'},
-            {value: 484, name: 'Union Ads'},
-            {value: 300, name: 'Video Ads'}
-          ],
+          radius: '180px',
+          data: props.data,
           emphasis: {
             itemStyle: {
               shadowBlur: 10,
@@ -39,8 +31,8 @@ export const Pie = () => {
         }
       ]
     };
-
-    option && myChart.setOption(option);
-  }, [])
-  return <div ref={ref} style={{height: '800px', width: '800px'}}/>
+    option && pieRef?.current && pieRef?.current.setOption(option);
+    pieRef.current?.resize()
+  }, [props.data])
+  return <div ref={ref} style={{height: '400px', width: '600px'}}/>
 }

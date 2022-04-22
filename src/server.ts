@@ -1,7 +1,15 @@
 import {axios} from "./global";
 
-const getData = (mode, server, begin, end, action) => {
-  return axios.get('https://akapi.saki.cc/data.php?mode='+mode+'&server='+server+'&begin='+begin+'&end='+end+'&action='+action)
+interface Params {
+  mode: string;
+  server: string;
+  begin: string;
+  end: string;
+  action?: string;
+}
+
+const getData = (params: Params) => {
+  return axios.get(`https://akapi.saki.cc/data.php`, {params})
 }
 
 export {
