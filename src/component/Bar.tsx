@@ -1,8 +1,10 @@
 import {echarts, React} from "../global";
+import useSize from "../hooks/useSize";
 
-export const Bar = ({data}: any) => {
+export const Bar = ({data, selectItem}: any) => {
   const {nameList, dateList, winTimesList, failTimesList, otherTimesList} = data
   const ref = React.useRef()
+  const {width, height} = useSize(ref)
   const barRef = React.useRef(null);
   React.useEffect(() => {
     barRef.current = echarts.init(ref.current);
@@ -27,7 +29,7 @@ export const Bar = ({data}: any) => {
       },
       yAxis: {
         type: 'category',
-        data: nameList
+        data: nameList.map((v: any, index: any) => `${dateList[index] ? `${dateList[index]}\n` : ''}${v}`)
       },
       series: [
         {
@@ -71,6 +73,14 @@ export const Bar = ({data}: any) => {
 
     option && barRef.current && barRef.current.setOption(option);
     barRef.current?.resize()
+    barRef.current.on('click', (params: any) => {
+      selectItem(params.name)
+    })
   }, [data])
-  return <div ref={ref} style={{height: `${100 + dateList.length * 80}px`, width: '600px'}}/>
+  React.useEffect(() => {
+    if (width && height) {
+      barRef?.current?.resize();
+    }
+  }, [width, height])
+  return <div ref={ref} style={{height: `${100 + dateList.length * 80}px`, width: '100%'}}/>
 }

@@ -1,48 +1,41 @@
-import {echarts, React, antd, ReactRouterDOM} from './global';
+import {React, ReactRouterDOM, XState, XStateReact} from './global';
 
 const {HashRouter, Route} = ReactRouterDOM;
-const {DatePicker} = antd;
 import './normalize.css';
 import './index.less';
 import {Main} from "./Main";
 
+const {createMachine} = XState;
+const {useMachine} = XStateReact
+const toggleMachine = createMachine({
+  id: 'toggle',
+  initial: 'inactive',
+  states: {
+    inactive: {
+      on: {TOGGLE: 'active'}
+    },
+    active: {
+      on: {TOGGLE: 'inactive'}
+    }
+  }
+});
+
 const Test = () => {
-  React.useEffect(() => {
-    var chartDom = document.getElementById('main')!;
-    var myChart = echarts.init(chartDom);
-    var option;
-
-    option = {
-      xAxis: {
-        type: 'category',
-        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-      },
-      yAxis: {
-        type: 'value'
-      },
-      series: [
-        {
-          data: [150, 230, 224, 218, 135, 147, 260],
-          type: 'line'
-        }
-      ]
-    };
-
-    option && myChart.setOption(option);
-  }, [])
-  console.log(244)
-  return <div className={'container'}>
-    <DatePicker/>
-    <div id={'main'} style={{height: '200px', width: '200px'}}/>
-  </div>
+  const [state, send] = useMachine(toggleMachine, {});
+  return (
+    <button onClick={() => send('TOGGLE')}>
+      {state.value === 'inactive'
+        ? 'Click to activate'
+        : 'Active! Click to deactivate'}
+    </button>
+  );
 }
 
 export default function Home() {
-  console.log(233)
   return (
     <HashRouter>
       <Route path="/" exact component={Main}/>
-      <Route path="/main" exact/>
+      <Route path="/main" exact component={Test}/>
     </HashRouter>
   )
 }

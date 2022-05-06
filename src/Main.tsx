@@ -1,17 +1,29 @@
-import {echarts, React, antd} from "./global";
+import {React, antd} from "./global";
 import {Pie} from "./component/Pie";
 import {Bar} from "./component/Bar";
 import {NormalBar} from "./component/NormalBar";
 import {getData} from "./server";
-import {CHART_DATA_DICT, EN_US, JA_JP, MODE_DAILY, ZH_CN} from "./const";
+import {
+  CHART_DATA_DICT,
+  CHART_NAME_TO_INDEX_DICT,
+  EN_US,
+  JA_JP,
+  MainContext,
+  MODE_DAILY,
+  PARADOX_MODE,
+  RANDOM_MODE,
+  ZH_CN
+} from "./const";
 
+const {useContext} = React
 const {Tabs, DatePicker, Select} = antd;
 const {RangePicker} = DatePicker;
 
 const {TabPane} = Tabs;
-const DailyView = ({server}: { server: string }) => {
-  const [date, setDate] = React.useState({begin: '', end: ''});
+const DataView = () => {
+  const {server, date, mode} = useContext(MainContext);
   const [pieData, setPieData] = React.useState([]);
+  const ref = React.useRef(null)
   const [barData, setBarData] = React.useState({
     nameList: [],
     dateList: [],
@@ -19,8 +31,26 @@ const DailyView = ({server}: { server: string }) => {
     failTimesList: [],
     otherTimesList: [],
   });
+  const [selectId, setId] = React.useState('')
+  const [selectDate, setSelectDate] = React.useState('')
+  const isDaily = mode === MODE_DAILY;
+  const selectItem = (label) => {
+    ref?.current?.scrollTo(0, 0);
+    if (isDaily) {
+      const [date, name] = label.split('\n')
+      setSelectDate(date);
+      setId(CHART_NAME_TO_INDEX_DICT[server][name]);
+    } else {
+      setSelectDate('');
+      setId(CHART_NAME_TO_INDEX_DICT[server][label]);
+    }
+  }
+  const clearSelect = () => {
+    setSelectDate('');
+    setId('');
+  }
   React.useEffect(() => {
-    getData({mode: MODE_DAILY, server, ...date}).then((data: any) => {
+    getData({mode, server, ...date}).then((data: any) => {
       const result = data.data.result;
       setPieData([
         {value: result?.init?.play_count ?? 0, name: '初始化'},
@@ -30,17 +60,35 @@ const DailyView = ({server}: { server: string }) => {
       ]);
     })
 
-    getData({mode: MODE_DAILY, server, action: 'stat_daily', ...date}).then((data: any) => {
-      const result = data.data.result;
+    getData({
+      mode,
+      server,
+      action: isDaily ? 'stat_daily' : 'stat_role_total', ...date
+    }).then((data: any) => {
+      const result = isDaily ? data.data.result : data.data.result.detail;
       setBarData({
-        nameList: result.map(({answer}) => CHART_DATA_DICT[server]?.[answer]?.name),
-        dateList: result.map(({date}) => date),
-        winTimesList: result.map(({win_count}) => win_count),
-        failTimesList: result.map(({lose_count}) => lose_count),
-        otherTimesList: result.map(({play_count}) => play_count),
+        nameList: result.map(({answer}: any) => CHART_DATA_DICT[server]?.[answer]?.name),
+        dateList: result.map(({date}: any) => date),
+        winTimesList: result.map(({win_count}: any) => win_count),
+        failTimesList: result.map(({lose_count}: any) => lose_count),
+        otherTimesList: result.map(({play_count}: any) => play_count),
       });
     })
-  }, [date, server])
+  }, [date, server, mode])
+  return <div>
+    <Pie data={pieData}/>
+    <div className={`half-chunk ${selectId ? 'not-scroll' : ''}`} ref={ref}>
+      <div className={'low-chunk'}>
+        {!!barData?.dateList?.length && <Bar selectItem={selectItem} data={barData}/>}
+      </div>
+      {selectId && <div className={'height-chunk'}>
+          <NormalBar selectId={selectId} selectDate={selectDate} clearSelect={clearSelect}/>
+      </div>}
+    </div>
+  </div>
+}
+const DateSelect = () => {
+  const {setDate} = useContext(MainContext);
   const selectDate = function (date: any[]) {
     if (date?.length) {
       setDate({begin: date[0].format('YYYY-MM-DD'), end: date[1].format('YYYY-MM-DD')})
@@ -48,37 +96,49 @@ const DailyView = ({server}: { server: string }) => {
       setDate({begin: '', end: ''})
     }
   }
-  return <div>
-    <RangePicker onChange={selectDate}/>
-    <Pie data={pieData}/>
-    {!!barData?.dateList?.length && <Bar data={barData}/>}
-  </div>
+  return <RangePicker onChange={selectDate}/>
 }
 export const Main = () => {
   const [server, setServer] = React.useState(ZH_CN);
+  const [mode, setMode] = React.useState(MODE_DAILY);
+  const [date, setDate] = React.useState({begin: '', end: ''});
 
-
-  const serverSelect = <Select value={server} onChange={(v) => {
+  const serverSelect = <Select value={server} onChange={(v: any) => {
     setServer(v);
+    setDate({begin: '', end: ''})
   }}>
     <Select.Option value={ZH_CN}>CN</Select.Option>
     <Select.Option value={EN_US}>EN</Select.Option>
     <Select.Option value={JA_JP}>JP</Select.Option>
   </Select>;
-
-  return <div className={'container'}>
-    <Tabs defaultActiveKey="daily" tabBarExtraContent={serverSelect}>
-      <TabPane tab="每日挑战" key={[MODE_DAILY]}>
-        <DailyView server={server}/>
-        <hr/>
-        {/*<NormalBar/>*/}
-      </TabPane>
-      <TabPane tab="随心所欲" key="random">
-        Content of card tab 2
-      </TabPane>
-      <TabPane tab="悖论模拟" key="paradox">
-        <Bar/>
-      </TabPane>
-    </Tabs>
-  </div>
+  return <MainContext.Provider value={{server, setServer, mode, date, setDate}}>
+    <div className={'container'}>
+      <Tabs activeKey={mode} onChange={(v: any) => {
+        setMode(v);
+        setDate({begin: '', end: ''})
+      }} tabBarExtraContent={serverSelect}>
+        <TabPane tab="每日挑战" key={[MODE_DAILY]}>
+          {MODE_DAILY === mode && <>
+              <DateSelect/>
+              <DataView/>
+          </>
+          }
+        </TabPane>
+        <TabPane tab="随心所欲" key={[RANDOM_MODE]}>
+          {RANDOM_MODE === mode && <>
+              <DateSelect/>
+              <DataView/>
+          </>
+          }
+        </TabPane>
+        <TabPane tab="悖论模拟" key={[PARADOX_MODE]}>
+          {PARADOX_MODE === mode && <>
+              <DateSelect/>
+              <DataView/>
+          </>
+          }
+        </TabPane>
+      </Tabs>
+    </div>
+  </MainContext.Provider>
 }

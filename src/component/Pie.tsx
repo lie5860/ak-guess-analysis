@@ -1,8 +1,10 @@
 import {echarts, React} from "../global";
+import useSize from "../hooks/useSize";
 
 export const Pie = (props: { data: any[] }) => {
   const ref = React.useRef()
   const pieRef = React.useRef(null);
+  const {width, height} = useSize(ref)
   React.useEffect(() => {
     pieRef.current = echarts.init(ref.current);
   }, [])
@@ -34,5 +36,11 @@ export const Pie = (props: { data: any[] }) => {
     option && pieRef?.current && pieRef?.current.setOption(option);
     pieRef.current?.resize()
   }, [props.data])
-  return <div ref={ref} style={{height: '400px', width: '600px'}}/>
+
+  React.useEffect(() => {
+    if (width && height) {
+      pieRef?.current?.resize();
+    }
+  }, [width, height])
+  return <div ref={ref} style={{height: '40vh', width: '100%'}}/>
 }

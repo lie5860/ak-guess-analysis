@@ -11,6 +11,9 @@ interface Window {
   antd: any,
   axios: any,
   ReactRouterDOM: any,
+  XStateReact: any,
+  XState: any,
+  ahooks: any,
   echarts: any,
 }
 
