@@ -117,7 +117,10 @@ export const Main = () => {
 
   const serverSelect = <Select value={server} onChange={(v: any) => {
     setServer(v);
-    setDate({begin: moment().format("YYYY-MM-DD"), end: moment().format("YYYY-MM-DD")})
+    setDate({
+      begin: moment().subtract(6, 'days').format("YYYY-MM-DD"),
+      end: moment().format("YYYY-MM-DD")
+    })
   }}>
     <Select.Option value={ZH_CN}>CN</Select.Option>
     <Select.Option value={EN_US}>EN</Select.Option>
@@ -127,7 +130,10 @@ export const Main = () => {
     <div className={'container'}>
       <Tabs activeKey={mode} onChange={(v: any) => {
         setMode(v);
-        setDate({begin: '', end: ''})
+        setDate({
+          begin: moment().subtract(6, 'days').format("YYYY-MM-DD"),
+          end: moment().format("YYYY-MM-DD")
+        })
       }} tabBarExtraContent={serverSelect}>
         <TabPane tab="每日挑战" key={[MODE_DAILY]}>
           {MODE_DAILY === mode && <>
