@@ -14,9 +14,10 @@ import {
   RANDOM_MODE,
   ZH_CN
 } from "./const";
+import SearchTable from "./component/SearchTable";
 
 const {useContext} = React
-const {Tabs, DatePicker, Select} = antd;
+const {Tabs, DatePicker, Select, Radio} = antd;
 const {RangePicker} = DatePicker;
 
 const {TabPane} = Tabs;
@@ -24,6 +25,7 @@ const DataView = () => {
   const {server, date, mode} = useContext(MainContext);
   const [pieData, setPieData] = React.useState([]);
   const ref = React.useRef(null)
+  const [tableData, setTableData] = React.useState([])
   const [barData, setBarData] = React.useState({
     nameList: [],
     dateList: [],
@@ -33,6 +35,7 @@ const DataView = () => {
   });
   const [selectId, setId] = React.useState('')
   const [selectDate, setSelectDate] = React.useState('')
+  const [showMode, setShowMode] = React.useState('table')
   const isDaily = mode === MODE_DAILY;
   const selectItem = (label) => {
     ref?.current?.scrollTo(0, 0);
@@ -66,6 +69,9 @@ const DataView = () => {
       action: isDaily ? 'stat_daily' : 'stat_role_total', ...date
     }).then((data: any) => {
       const result = isDaily ? data.data.result : data.data.result.detail;
+      setTableData(result.map(v => {
+        return {...v, name: CHART_DATA_DICT[server]?.[v.answer]?.name}
+      }))
       setBarData({
         nameList: result.map(({answer}: any) => CHART_DATA_DICT[server]?.[answer]?.name),
         dateList: result.map(({date}: any) => date),
@@ -77,12 +83,28 @@ const DataView = () => {
   }, [date, server, mode])
   return <div>
     <Pie data={pieData}/>
-    <div className={`half-chunk ${selectId ? 'not-scroll' : ''}`} ref={ref}>
-      <div className={'low-chunk'}>
-        {!!barData?.dateList?.length && <Bar selectItem={selectItem} data={barData}/>}
-      </div>
-      {selectId && <div className={'height-chunk'}>
-          <NormalBar selectId={selectId} selectDate={selectDate} clearSelect={clearSelect}/>
+    <Radio.Group
+      options={[
+        {label: '表视图', value: 'table'},
+        {label: '柱形图', value: 'bar'},
+      ]}
+      onChange={(e) => {
+        setShowMode(e.target.value)
+      }}
+      value={showMode}
+      optionType="button"
+    />
+    <div style={{position: 'relative'}}>
+      {showMode === 'table' && <div className={`half-chunk`}>
+          <SearchTable data={tableData}/>
+      </div>}
+      {showMode === 'bar' && <div className={`half-chunk ${selectId ? 'not-scroll' : ''}`} ref={ref}>
+          <div className={'low-chunk'}>
+            {!!barData?.dateList?.length && <Bar selectItem={selectItem} data={barData}/>}
+          </div>
+        {selectId && <div className={'height-chunk'}>
+            <NormalBar selectId={selectId} selectDate={selectDate} clearSelect={clearSelect}/>
+        </div>}
       </div>}
     </div>
   </div>

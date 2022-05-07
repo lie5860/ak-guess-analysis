@@ -21,7 +21,7 @@ export const Pie = (props: { data: any[] }) => {
       series: [
         {
           type: 'pie',
-          radius: '180px',
+          radius: '70%',
           data: props.data,
           emphasis: {
             itemStyle: {
@@ -42,5 +42,5 @@ export const Pie = (props: { data: any[] }) => {
       pieRef?.current?.resize();
     }
   }, [width, height])
-  return <div ref={ref} style={{height: '40vh', width: '100%'}}/>
+  return <div ref={ref} style={{height: '30vh', width: '100%'}}/>
 }
