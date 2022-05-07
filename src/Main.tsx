@@ -1,4 +1,4 @@
-import {React, antd} from "./global";
+import {React, antd, moment} from "./global";
 import {Pie} from "./component/Pie";
 import {Bar} from "./component/Bar";
 import {NormalBar} from "./component/NormalBar";
@@ -87,8 +87,13 @@ const DataView = () => {
     </div>
   </div>
 }
+const dates: object = {
+  最近一周: [moment().startOf('day').subtract(1, 'week').add(1, 'day'), moment().endOf('day')],
+  最近一个月: [moment().startOf('day').subtract(1, 'month').add(1, 'day'), moment().endOf('day')],
+  最近三个月: [moment().startOf('day').subtract(3, 'month').add(1, 'day'), moment().startOf('day')]
+};
 const DateSelect = () => {
-  const {setDate} = useContext(MainContext);
+  const {setDate, date} = useContext(MainContext);
   const selectDate = function (date: any[]) {
     if (date?.length) {
       setDate({begin: date[0].format('YYYY-MM-DD'), end: date[1].format('YYYY-MM-DD')})
@@ -96,16 +101,23 @@ const DateSelect = () => {
       setDate({begin: '', end: ''})
     }
   }
-  return <RangePicker onChange={selectDate}/>
+  return <RangePicker
+    ranges={{...dates}}
+    value={date['begin'] ? [moment(date['begin']), moment(date['end'])] : undefined}
+    onChange={selectDate}
+  />
 }
 export const Main = () => {
   const [server, setServer] = React.useState(ZH_CN);
   const [mode, setMode] = React.useState(MODE_DAILY);
-  const [date, setDate] = React.useState({begin: '', end: ''});
+  const [date, setDate] = React.useState({
+    begin: moment().subtract(6, 'days').format("YYYY-MM-DD"),
+    end: moment().format("YYYY-MM-DD")
+  });
 
   const serverSelect = <Select value={server} onChange={(v: any) => {
     setServer(v);
-    setDate({begin: '', end: ''})
+    setDate({begin: moment().format("YYYY-MM-DD"), end: moment().format("YYYY-MM-DD")})
   }}>
     <Select.Option value={ZH_CN}>CN</Select.Option>
     <Select.Option value={EN_US}>EN</Select.Option>
